@@ -29,16 +29,41 @@ namespace Porkbun {
         /// <param name="certFileName">The filename for the certificate chain.</param>
         /// <param name="privateKeyFileName">The filename for the private key.</param>
         /// <param name="publicKeyFileName">The filename for the public key.</param>
+        /// <remarks>
+        /// File extensions:
+        /// - Certificate Chain: ".crt" or ".pem"
+        /// - Private Key: ".key" or ".pem"
+        /// - Public Key: ".pub"
+        /// </remarks>
         public void SaveToFiles(string directory, string certFileName, string privateKeyFileName, string publicKeyFileName) {
             if (status != "SUCCESS")
                 throw new InvalidOperationException("Invalid SSL certificate response.");
-            Directory.CreateDirectory(directory);
-            DeleteIfExists(Path.Combine(directory, certFileName));
-            DeleteIfExists(Path.Combine(directory, privateKeyFileName));
-            DeleteIfExists(Path.Combine(directory, publicKeyFileName));
-            File.WriteAllText(Path.Combine(directory, certFileName), certificatechain);
-            File.WriteAllText(Path.Combine(directory, privateKeyFileName), privatekey);
-            File.WriteAllText(Path.Combine(directory, publicKeyFileName), publickey);
+
+            string certPath = Path.Combine(directory, certFileName);
+            string privateKeyPath = Path.Combine(directory, privateKeyFileName);
+            string publicKeyPath = Path.Combine(directory, publicKeyFileName);
+
+            string tempCertPath = certPath + ".tmp";
+            string tempPrivateKeyPath = privateKeyPath + ".tmp";
+            string tempPublicKeyPath = publicKeyPath + ".tmp";
+
+            try {
+                MoveFileIfExists(certPath, tempCertPath);
+                MoveFileIfExists(privateKeyPath, tempPrivateKeyPath);
+                MoveFileIfExists(publicKeyPath, tempPublicKeyPath);
+                File.WriteAllText(certPath, certificatechain);
+                File.WriteAllText(privateKeyPath, privatekey);
+                File.WriteAllText(publicKeyPath, publickey);
+                DeleteIfExists(tempCertPath);
+                DeleteIfExists(tempPrivateKeyPath);
+                DeleteIfExists(tempPublicKeyPath);
+            }
+            catch (Exception) {
+                RollbackTempFile(tempCertPath, certPath);
+                RollbackTempFile(tempPrivateKeyPath, privateKeyPath);
+                RollbackTempFile(tempPublicKeyPath, publicKeyPath);
+                throw;
+            }
         }
 
         /// <summary>
@@ -47,6 +72,20 @@ namespace Porkbun {
         private void DeleteIfExists(string filePath) {
             if (File.Exists(filePath)) {
                 File.Delete(filePath);
+            }
+        }
+
+        private void MoveFileIfExists(string sourcePath, string destinationPath) {
+            if (File.Exists(sourcePath)) {
+                DeleteIfExists(destinationPath);
+                File.Move(sourcePath, destinationPath);
+            }
+        }
+
+        private void RollbackTempFile(string tempPath, string originalPath) {
+            if (File.Exists(tempPath)) {
+                DeleteIfExists(originalPath);
+                File.Move(tempPath, originalPath);
             }
         }
 
