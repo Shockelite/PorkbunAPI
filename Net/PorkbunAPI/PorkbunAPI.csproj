@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>
+			net5.0;net6.0;net7.0;net8.0
+		</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<RootNamespace>Porkbun</RootNamespace>
+		<AssemblyName>PorkbunAPI</AssemblyName>
+		<AssemblyVersion>1.0.25060.0</AssemblyVersion>
+		<FileVersion>1.0.25060.0</FileVersion>
+		<OutputPath>..\..\Build\</OutputPath>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="..\..\Assets\**\*.cs">
+			<Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+		</Compile>
+	</ItemGroup>
+</Project>
